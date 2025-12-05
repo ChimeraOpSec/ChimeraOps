@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
 // ============================================================================
-// UTILITYHUB v2.1 — Privacy-First Multi-Tool Platform
+// CHIMERAOPS v2.0 — Privacy-First Security Tools
 // All processing happens client-side. No data leaves your browser.
 // ============================================================================
 
@@ -44,6 +44,354 @@ const TabGroup = ({ darkMode, tabs, active, onChange }) => (
     ))}
   </div>
 );
+
+// ============================================================================
+// DEVELOPER TOOLS (NEW)
+// ============================================================================
+
+const JSONFormatter = ({ darkMode }) => {
+  const [input, setInput] = useState('');
+  const [output, setOutput] = useState('');
+  const [error, setError] = useState('');
+  const [indentSize, setIndentSize] = useState(2);
+
+  const formatJSON = useCallback(() => {
+    setError('');
+    if (!input.trim()) { setOutput(''); return; }
+    try {
+      const parsed = JSON.parse(input);
+      setOutput(JSON.stringify(parsed, null, indentSize));
+    } catch (e) {
+      setError(`Invalid JSON: ${e.message}`);
+      setOutput('');
+    }
+  }, [input, indentSize]);
+
+  const minifyJSON = useCallback(() => {
+    setError('');
+    if (!input.trim()) { setOutput(''); return; }
+    try {
+      const parsed = JSON.parse(input);
+      setOutput(JSON.stringify(parsed));
+    } catch (e) {
+      setError(`Invalid JSON: ${e.message}`);
+      setOutput('');
+    }
+  }, [input]);
+
+  useEffect(() => { if (input) formatJSON(); }, [indentSize, formatJSON, input]);
+
+  return (
+    <div className="space-y-6">
+      <div className="grid md:grid-cols-2 gap-4">
+        <div>
+          <Label darkMode={darkMode}>Input JSON</Label>
+          <TextArea darkMode={darkMode} rows={12} placeholder='{"name": "value", "array": [1, 2, 3]}' value={input} onChange={e => setInput(e.target.value)} className="font-mono text-sm" />
+        </div>
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <Label darkMode={darkMode} className="mb-0">Output</Label>
+            <CopyButton darkMode={darkMode} text={output} />
+          </div>
+          <TextArea darkMode={darkMode} rows={12} value={output} readOnly className="font-mono text-sm" placeholder="Formatted JSON..." />
+        </div>
+      </div>
+      {error && <div className={`p-3 rounded-xl ${darkMode ? 'bg-red-500/10 border border-red-500/30 text-red-400' : 'bg-red-50 border border-red-200 text-red-600'}`}>{error}</div>}
+      <div className="flex flex-wrap items-center gap-4">
+        <div className="flex items-center gap-2">
+          <Label darkMode={darkMode} className="mb-0">Indent:</Label>
+          <select value={indentSize} onChange={e => setIndentSize(parseInt(e.target.value))} className={`px-3 py-2 rounded-lg ${darkMode ? 'bg-white/5 text-white border border-white/10' : 'bg-gray-100 text-gray-900'}`}>
+            <option value={2}>2 spaces</option>
+            <option value={4}>4 spaces</option>
+          </select>
+        </div>
+        <Button darkMode={darkMode} onClick={formatJSON}>Format</Button>
+        <Button darkMode={darkMode} variant="secondary" onClick={minifyJSON}>Minify</Button>
+        <Button darkMode={darkMode} variant="ghost" onClick={() => { setInput(''); setOutput(''); setError(''); }}>Clear</Button>
+      </div>
+    </div>
+  );
+};
+
+const RegexTester = ({ darkMode }) => {
+  const [pattern, setPattern] = useState('');
+  const [flags, setFlags] = useState('g');
+  const [testString, setTestString] = useState('');
+  const [matches, setMatches] = useState([]);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    setError('');
+    setMatches([]);
+    if (!pattern || !testString) return;
+    try {
+      const regex = new RegExp(pattern, flags);
+      const allMatches = [];
+      let match;
+      if (flags.includes('g')) {
+        while ((match = regex.exec(testString)) !== null) {
+          allMatches.push({ match: match[0], index: match.index, groups: match.slice(1) });
+          if (match.index === regex.lastIndex) regex.lastIndex++;
+        }
+      } else {
+        match = regex.exec(testString);
+        if (match) allMatches.push({ match: match[0], index: match.index, groups: match.slice(1) });
+      }
+      setMatches(allMatches);
+    } catch (e) { setError(`Invalid regex: ${e.message}`); }
+  }, [pattern, flags, testString]);
+
+  const toggleFlag = (flag) => setFlags(prev => prev.includes(flag) ? prev.replace(flag, '') : prev + flag);
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <Label darkMode={darkMode}>Regular Expression</Label>
+        <div className="flex gap-2">
+          <div className={`flex items-center px-3 rounded-l-xl ${darkMode ? 'bg-white/10 text-gray-400' : 'bg-gray-200 text-gray-500'}`}>/</div>
+          <Input darkMode={darkMode} value={pattern} onChange={e => setPattern(e.target.value)} placeholder="Enter regex pattern..." className="rounded-none font-mono" />
+          <div className={`flex items-center px-3 rounded-r-xl ${darkMode ? 'bg-white/10 text-gray-400' : 'bg-gray-200 text-gray-500'}`}>/{flags}</div>
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Label darkMode={darkMode} className="mb-0 mr-2">Flags:</Label>
+        {[{ flag: 'g', label: 'Global' }, { flag: 'i', label: 'Case Insensitive' }, { flag: 'm', label: 'Multiline' }].map(({ flag, label }) => (
+          <button key={flag} onClick={() => toggleFlag(flag)} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${flags.includes(flag) ? 'bg-violet-600 text-white' : darkMode ? 'bg-white/5 text-gray-400' : 'bg-gray-200 text-gray-600'}`}>{flag} - {label}</button>
+        ))}
+      </div>
+      <div><Label darkMode={darkMode}>Test String</Label><TextArea darkMode={darkMode} rows={4} value={testString} onChange={e => setTestString(e.target.value)} placeholder="Enter text to test..." /></div>
+      {error && <div className={`p-3 rounded-xl ${darkMode ? 'bg-red-500/10 text-red-400' : 'bg-red-50 text-red-600'}`}>{error}</div>}
+      {matches.length > 0 && (
+        <Card darkMode={darkMode}>
+          <Label darkMode={darkMode}>Matches ({matches.length} found)</Label>
+          <div className="space-y-2">
+            {matches.map((m, i) => (
+              <div key={i} className={`p-2 rounded-lg ${darkMode ? 'bg-black/30' : 'bg-white'}`}>
+                <span className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>Match {i + 1} at index {m.index}: </span>
+                <span className={`font-mono ${darkMode ? 'text-violet-400' : 'text-violet-600'}`}>"{m.match}"</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+};
+
+const UUIDGenerator = ({ darkMode }) => {
+  const [uuids, setUuids] = useState([]);
+  const [count, setCount] = useState(5);
+  const [format, setFormat] = useState('default');
+
+  const generateUUID = useCallback(() => {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : ((r & 0x3) | 0x8);
+      return v.toString(16);
+    });
+  }, []);
+
+  const generateUUIDs = useCallback(() => {
+    const newUuids = [];
+    for (let i = 0; i < count; i++) {
+      let uuid = generateUUID();
+      if (format === 'uppercase') uuid = uuid.toUpperCase();
+      else if (format === 'no-dashes') uuid = uuid.replace(/-/g, '');
+      else if (format === 'braces') uuid = `{${uuid}}`;
+      newUuids.push(uuid);
+    }
+    setUuids(newUuids);
+  }, [count, format, generateUUID]);
+
+  useEffect(() => { generateUUIDs(); }, [generateUUIDs]);
+
+  return (
+    <div className="space-y-6">
+      <Card darkMode={darkMode} className={darkMode ? 'bg-violet-500/10 border border-violet-500/20' : 'bg-violet-50 border border-violet-200'}>
+        <div className="flex items-start gap-3">
+          <span className="text-2xl">🎲</span>
+          <div>
+            <div className={`font-medium mb-1 ${darkMode ? 'text-violet-300' : 'text-violet-800'}`}>UUID v4 Generator</div>
+            <div className={`text-sm ${darkMode ? 'text-violet-300/70' : 'text-violet-700'}`}>Generates cryptographically random UUIDs.</div>
+          </div>
+        </div>
+      </Card>
+      <div className="flex flex-wrap gap-4 items-end">
+        <div>
+          <Label darkMode={darkMode}>Count</Label>
+          <select value={count} onChange={e => setCount(parseInt(e.target.value))} className={`px-4 py-3 rounded-xl ${darkMode ? 'bg-white/5 text-white border border-white/10' : 'bg-gray-100 text-gray-900'}`}>
+            {[1, 5, 10, 25, 50, 100].map(n => <option key={n} value={n}>{n}</option>)}
+          </select>
+        </div>
+        <div>
+          <Label darkMode={darkMode}>Format</Label>
+          <select value={format} onChange={e => setFormat(e.target.value)} className={`px-4 py-3 rounded-xl ${darkMode ? 'bg-white/5 text-white border border-white/10' : 'bg-gray-100 text-gray-900'}`}>
+            <option value="default">Default</option>
+            <option value="uppercase">UPPERCASE</option>
+            <option value="no-dashes">No dashes</option>
+            <option value="braces">{"{braces}"}</option>
+          </select>
+        </div>
+        <Button darkMode={darkMode} onClick={generateUUIDs}>Generate</Button>
+        <Button darkMode={darkMode} variant="secondary" onClick={() => navigator.clipboard.writeText(uuids.join('\n'))}>Copy All</Button>
+      </div>
+      <div className="space-y-2">
+        {uuids.map((uuid, i) => (
+          <div key={i} className={`flex items-center justify-between p-3 rounded-xl ${darkMode ? 'bg-white/5' : 'bg-gray-100'}`}>
+            <code className={`font-mono ${darkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>{uuid}</code>
+            <CopyButton darkMode={darkMode} text={uuid} label="Copy" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const JWTDecoder = ({ darkMode }) => {
+  const [token, setToken] = useState('');
+  const [decoded, setDecoded] = useState(null);
+  const [error, setError] = useState('');
+
+  const decodeJWT = useCallback((jwt) => {
+    setError('');
+    setDecoded(null);
+    if (!jwt.trim()) return;
+    const parts = jwt.split('.');
+    if (parts.length !== 3) { setError('Invalid JWT format. Expected 3 parts.'); return; }
+    try {
+      const decodeBase64 = (str) => {
+        const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+        const padded = base64 + '=='.slice(0, (4 - base64.length % 4) % 4);
+        return JSON.parse(atob(padded));
+      };
+      const header = decodeBase64(parts[0]);
+      const payload = decodeBase64(parts[1]);
+      let expStatus = null;
+      if (payload.exp) {
+        const expDate = new Date(payload.exp * 1000);
+        expStatus = { expired: expDate < new Date(), date: expDate.toLocaleString() };
+      }
+      setDecoded({ header, payload, signature: parts[2], expStatus });
+    } catch (e) { setError(`Failed to decode: ${e.message}`); }
+  }, []);
+
+  useEffect(() => { decodeJWT(token); }, [token, decodeJWT]);
+
+  return (
+    <div className="space-y-6">
+      <Card darkMode={darkMode} className={darkMode ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-amber-50 border border-amber-200'}>
+        <div className="flex items-start gap-3">
+          <span className="text-2xl">🔑</span>
+          <div>
+            <div className={`font-medium mb-1 ${darkMode ? 'text-amber-300' : 'text-amber-800'}`}>JWT Decoder</div>
+            <div className={`text-sm ${darkMode ? 'text-amber-300/70' : 'text-amber-700'}`}>Decode JSON Web Tokens locally. Your tokens never leave your browser.</div>
+          </div>
+        </div>
+      </Card>
+      <div><Label darkMode={darkMode}>Paste JWT Token</Label><TextArea darkMode={darkMode} rows={4} value={token} onChange={e => setToken(e.target.value)} placeholder="eyJhbGciOiJIUzI1NiIs..." className="font-mono text-sm" /></div>
+      {error && <div className={`p-3 rounded-xl ${darkMode ? 'bg-red-500/10 text-red-400' : 'bg-red-50 text-red-600'}`}>{error}</div>}
+      {decoded && (
+        <div className="space-y-4">
+          {decoded.expStatus && (
+            <div className={`p-3 rounded-xl ${decoded.expStatus.expired ? (darkMode ? 'bg-red-500/10 border border-red-500/30' : 'bg-red-50') : (darkMode ? 'bg-emerald-500/10 border border-emerald-500/30' : 'bg-emerald-50')}`}>
+              <span className={decoded.expStatus.expired ? (darkMode ? 'text-red-400' : 'text-red-600') : (darkMode ? 'text-emerald-400' : 'text-emerald-600')}>
+                {decoded.expStatus.expired ? '⚠️ Token EXPIRED' : '✓ Token Valid'} — Expires: {decoded.expStatus.date}
+              </span>
+            </div>
+          )}
+          <Card darkMode={darkMode}>
+            <Label darkMode={darkMode}>Header</Label>
+            <pre className={`p-3 rounded-lg overflow-x-auto font-mono text-sm ${darkMode ? 'bg-black/30 text-red-400' : 'bg-white text-red-600'}`}>{JSON.stringify(decoded.header, null, 2)}</pre>
+          </Card>
+          <Card darkMode={darkMode}>
+            <Label darkMode={darkMode}>Payload</Label>
+            <pre className={`p-3 rounded-lg overflow-x-auto font-mono text-sm ${darkMode ? 'bg-black/30 text-violet-400' : 'bg-white text-violet-600'}`}>{JSON.stringify(decoded.payload, null, 2)}</pre>
+          </Card>
+          <Card darkMode={darkMode}>
+            <Label darkMode={darkMode}>Signature</Label>
+            <div className={`p-3 rounded-lg font-mono text-sm break-all ${darkMode ? 'bg-black/30 text-cyan-400' : 'bg-white text-cyan-600'}`}>{decoded.signature}</div>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const TimestampConverter = ({ darkMode }) => {
+  const [timestamp, setTimestamp] = useState('');
+  const [humanDate, setHumanDate] = useState('');
+  const [currentTimestamp, setCurrentTimestamp] = useState(Math.floor(Date.now() / 1000));
+  const [mode, setMode] = useState('toHuman');
+
+  useEffect(() => {
+    const interval = setInterval(() => setCurrentTimestamp(Math.floor(Date.now() / 1000)), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (mode === 'toHuman' && timestamp) {
+      const ts = parseInt(timestamp);
+      if (!isNaN(ts)) {
+        const date = ts > 9999999999 ? new Date(ts) : new Date(ts * 1000);
+        setHumanDate(date.toLocaleString() + ' (' + date.toISOString() + ')');
+      }
+    } else if (mode === 'toTimestamp' && humanDate) {
+      const date = new Date(humanDate);
+      if (!isNaN(date.getTime())) setTimestamp(Math.floor(date.getTime() / 1000).toString());
+    }
+  }, [mode, timestamp, humanDate]);
+
+  return (
+    <div className="space-y-6">
+      <Card darkMode={darkMode} className={darkMode ? 'bg-cyan-500/10 border border-cyan-500/20' : 'bg-cyan-50 border border-cyan-200'}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">⏱️</span>
+            <div>
+              <div className={`font-medium ${darkMode ? 'text-cyan-300' : 'text-cyan-800'}`}>Current Unix Timestamp</div>
+              <div className={`font-mono text-2xl ${darkMode ? 'text-white' : 'text-gray-900'}`}>{currentTimestamp}</div>
+            </div>
+          </div>
+          <CopyButton darkMode={darkMode} text={currentTimestamp.toString()} />
+        </div>
+      </Card>
+      <TabGroup darkMode={darkMode} tabs={[{ id: 'toHuman', label: 'Timestamp → Human' }, { id: 'toTimestamp', label: 'Human → Timestamp' }]} active={mode} onChange={setMode} />
+      {mode === 'toHuman' ? (
+        <div className="space-y-4">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <Label darkMode={darkMode} className="mb-0">Unix Timestamp</Label>
+              <Button darkMode={darkMode} variant="ghost" onClick={() => setTimestamp(currentTimestamp.toString())}>Use Now</Button>
+            </div>
+            <Input darkMode={darkMode} type="number" value={timestamp} onChange={e => setTimestamp(e.target.value)} placeholder="1234567890" className="font-mono" />
+          </div>
+          {humanDate && <Card darkMode={darkMode}><Label darkMode={darkMode}>Human Readable</Label><div className={`font-mono ${darkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>{humanDate}</div></Card>}
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div><Label darkMode={darkMode}>Date & Time</Label><Input darkMode={darkMode} type="datetime-local" value={humanDate} onChange={e => setHumanDate(e.target.value)} /></div>
+          {timestamp && (
+            <Card darkMode={darkMode}>
+              <div className="flex items-center justify-between">
+                <div><Label darkMode={darkMode}>Unix Timestamp</Label><div className={`font-mono text-xl ${darkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>{timestamp}</div></div>
+                <CopyButton darkMode={darkMode} text={timestamp} />
+              </div>
+            </Card>
+          )}
+        </div>
+      )}
+      <Card darkMode={darkMode}>
+        <Label darkMode={darkMode}>Quick Reference</Label>
+        <div className={`grid grid-cols-2 gap-2 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          <div>1 hour = 3,600</div>
+          <div>1 day = 86,400</div>
+          <div>1 week = 604,800</div>
+          <div>1 year ≈ 31,536,000</div>
+        </div>
+      </Card>
+    </div>
+  );
+};
 
 // ============================================================================
 // CRYPTO & PRIVACY TOOLS
@@ -595,7 +943,7 @@ const PasswordGenerator = ({ darkMode }) => {
 // ============================================================================
 
 const QRGenerator = ({ darkMode }) => {
-  const [text, setText] = useState('https://example.com');
+  const [text, setText] = useState('https://chimeraops.org');
   const [fgColor, setFgColor] = useState('#8b5cf6');
   const [bgColor, setBgColor] = useState('#ffffff');
   const [size, setSize] = useState(200);
@@ -770,11 +1118,12 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const categories = useMemo(() => ({
-    popular: { label: 'Popular', icon: '★', tools: ['qr-generator', 'password-gen', 'hash-generator', 'unit-converter', 'calculator'] },
-    crypto: { label: 'Crypto & Privacy', icon: '🔐', tools: ['pgp-tool', 'hash-generator', 'hash-identifier', 'entropy-analyzer'] },
+    popular: { label: 'Popular', icon: '★', tools: ['qr-generator', 'password-gen', 'hash-generator', 'json-formatter', 'uuid-generator'] },
+    crypto: { label: 'Crypto & Privacy', icon: '🔐', tools: ['pgp-tool', 'hash-generator', 'hash-identifier', 'entropy-analyzer', 'jwt-decoder'] },
     encoding: { label: 'Encoding', icon: '⟨⟩', tools: ['binary-converter', 'hex-converter', 'base64-tool', 'morse-code', 'zero-width', 'rot13-cipher'] },
+    developer: { label: 'Developer', icon: '{ }', tools: ['json-formatter', 'regex-tester', 'uuid-generator', 'jwt-decoder', 'timestamp-converter'] },
     text: { label: 'Text Tools', icon: '¶', tools: ['word-counter', 'case-converter'] },
-    calculators: { label: 'Calculators', icon: '∑', tools: ['calculator'] },
+    calculators: { label: 'Calculators', icon: '∑', tools: ['calculator', 'unit-converter'] },
     media: { label: 'Colors', icon: '◐', tools: ['color-picker'] },
   }), []);
 
@@ -796,6 +1145,11 @@ function App() {
     'word-counter': { name: 'Word Counter', desc: 'Count words & chars' },
     'case-converter': { name: 'Case Converter', desc: 'Transform text case' },
     'color-picker': { name: 'Color Picker', desc: 'Pick and convert colors' },
+    'json-formatter': { name: 'JSON Formatter', desc: 'Format & validate JSON' },
+    'regex-tester': { name: 'Regex Tester', desc: 'Test regular expressions' },
+    'uuid-generator': { name: 'UUID Generator', desc: 'Generate unique IDs' },
+    'jwt-decoder': { name: 'JWT Decoder', desc: 'Decode JSON Web Tokens' },
+    'timestamp-converter': { name: 'Timestamp Converter', desc: 'Unix timestamp tools' },
   }), []);
 
   const renderTool = () => {
@@ -818,6 +1172,11 @@ function App() {
       case 'word-counter': return <WordCounter {...props} />;
       case 'case-converter': return <CaseConverter {...props} />;
       case 'color-picker': return <ColorPicker {...props} />;
+      case 'json-formatter': return <JSONFormatter {...props} />;
+      case 'regex-tester': return <RegexTester {...props} />;
+      case 'uuid-generator': return <UUIDGenerator {...props} />;
+      case 'jwt-decoder': return <JWTDecoder {...props} />;
+      case 'timestamp-converter': return <TimestampConverter {...props} />;
       default: return <QRGenerator {...props} />;
     }
   };
@@ -840,7 +1199,7 @@ function App() {
       {/* Mobile Header */}
       <header className={`lg:hidden fixed top-0 left-0 right-0 z-50 px-4 py-3 flex items-center justify-between ${darkMode ? 'bg-[#0a0a0f]/90 backdrop-blur-xl border-b border-white/5' : 'bg-white/90 backdrop-blur-xl border-b border-black/5'}`}>
         <button onClick={() => setSidebarOpen(!sidebarOpen)} className={`w-10 h-10 rounded-xl flex items-center justify-center ${darkMode ? 'bg-white/5 text-white' : 'bg-black/5 text-gray-900'}`}>{sidebarOpen ? '✕' : '☰'}</button>
-        <div className="flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center text-white font-bold text-sm">U</div><span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>UtilityHub</span></div>
+        <div className="flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center text-white font-bold text-sm">C</div><span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>ChimeraOps</span></div>
         <button onClick={() => setDarkMode(!darkMode)} className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${darkMode ? 'bg-white/5 text-white' : 'bg-black/5 text-gray-900'}`}>{darkMode ? '☀' : '☾'}</button>
       </header>
 
@@ -853,8 +1212,8 @@ function App() {
           <div className={`h-full flex flex-col ${darkMode ? 'bg-[#0c0c12]/95 lg:bg-[#0c0c12]/80 backdrop-blur-xl border-r border-white/5' : 'bg-white/95 lg:bg-white/80 backdrop-blur-xl border-r border-black/5'}`}>
             <div className="p-4 pt-6 hidden lg:block">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 flex items-center justify-center text-white font-bold shadow-lg shadow-violet-500/25">U</div>
-                <div><h1 className={`text-lg font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>UtilityHub</h1><p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>Privacy-first tools</p></div>
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 flex items-center justify-center text-white font-bold shadow-lg shadow-violet-500/25">C</div>
+                <div><h1 className={`text-lg font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>ChimeraOps</h1><p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>Privacy-First Security Tools</p></div>
               </div>
               <button onClick={() => setDarkMode(!darkMode)} className={`w-full flex items-center justify-between px-3 py-2 rounded-lg mb-4 ${darkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'}`}>
                 <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{darkMode ? 'Dark Mode' : 'Light Mode'}</span>
