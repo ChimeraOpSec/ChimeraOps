@@ -1,46 +1,47 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
 // ============================================================================
-// CHIMERAOPS v2.0 — Privacy-First Security Tools
+// PROTEUSKIT v1.0 — Adapt. Encrypt. Disappear.
 // All processing happens client-side. No data leaves your browser.
 // ============================================================================
 
-// Shared UI Components
+// Shared UI Components — Cyberpunk Style
 const Input = ({ darkMode, className = '', ...props }) => (
-  <input className={`w-full px-4 py-3 rounded-xl outline-none transition-all ${darkMode ? 'bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-violet-500' : 'bg-gray-100 border border-gray-200 text-gray-900 placeholder-gray-400 focus:border-violet-500'} ${className}`} {...props} />
+  <input className={`w-full px-4 py-3 rounded-lg outline-none transition-all ${darkMode ? 'bg-black/50 border border-cyan-500/30 text-cyan-100 placeholder-cyan-800 focus:border-cyan-400 focus:shadow-[0_0_10px_rgba(0,240,255,0.3)] font-mono' : 'bg-gray-100 border border-gray-200 text-gray-900 placeholder-gray-400 focus:border-cyan-500'} ${className}`} {...props} />
 );
 
 const TextArea = ({ darkMode, className = '', ...props }) => (
-  <textarea className={`w-full px-4 py-3 rounded-xl outline-none transition-all resize-none ${darkMode ? 'bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-violet-500' : 'bg-gray-100 border border-gray-200 text-gray-900 placeholder-gray-400 focus:border-violet-500'} ${className}`} {...props} />
+  <textarea className={`w-full px-4 py-3 rounded-lg outline-none transition-all resize-none ${darkMode ? 'bg-black/50 border border-cyan-500/30 text-cyan-100 placeholder-cyan-800 focus:border-cyan-400 focus:shadow-[0_0_10px_rgba(0,240,255,0.3)] font-mono' : 'bg-gray-100 border border-gray-200 text-gray-900 placeholder-gray-400 focus:border-cyan-500'} ${className}`} {...props} />
 );
 
 const Button = ({ darkMode, variant = 'primary', className = '', children, ...props }) => {
   const variants = {
-    primary: 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:from-violet-500 hover:to-fuchsia-500 shadow-lg shadow-violet-500/25',
-    secondary: darkMode ? 'bg-white/10 text-white hover:bg-white/15' : 'bg-gray-200 text-gray-900 hover:bg-gray-300',
-    ghost: darkMode ? 'text-gray-400 hover:text-white hover:bg-white/5' : 'text-gray-600 hover:text-gray-900 hover:bg-black/5',
+    primary: 'bg-gradient-to-r from-cyan-500 to-cyan-400 text-black font-bold hover:from-cyan-400 hover:to-cyan-300 shadow-[0_0_20px_rgba(0,240,255,0.4)] hover:shadow-[0_0_30px_rgba(0,240,255,0.6)]',
+    danger: 'bg-gradient-to-r from-red-600 to-red-500 text-white font-bold hover:from-red-500 hover:to-red-400 shadow-[0_0_20px_rgba(255,0,51,0.4)]',
+    secondary: darkMode ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/20 hover:border-cyan-400' : 'bg-gray-200 text-gray-900 hover:bg-gray-300',
+    ghost: darkMode ? 'text-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10' : 'text-gray-600 hover:text-gray-900 hover:bg-black/5',
   };
-  return <button className={`px-4 py-2.5 rounded-xl font-medium transition-all ${variants[variant]} ${className}`} {...props}>{children}</button>;
+  return <button className={`px-4 py-2.5 rounded-lg font-medium transition-all uppercase tracking-wider text-sm ${variants[variant]} ${className}`} {...props}>{children}</button>;
 };
 
 const Label = ({ darkMode, children, className = '' }) => (
-  <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'} ${className}`}>{children}</label>
+  <label className={`block text-xs font-bold uppercase tracking-widest mb-2 ${darkMode ? 'text-cyan-500' : 'text-gray-700'} ${className}`}>{children}</label>
 );
 
 const Card = ({ darkMode, children, className = '' }) => (
-  <div className={`p-4 rounded-xl ${darkMode ? 'bg-white/5' : 'bg-gray-100'} ${className}`}>{children}</div>
+  <div className={`p-4 rounded-lg border ${darkMode ? 'bg-black/30 border-cyan-500/20' : 'bg-gray-100 border-gray-200'} ${className}`}>{children}</div>
 );
 
 const CopyButton = ({ darkMode, text, label = 'Copy' }) => {
   const [copied, setCopied] = useState(false);
   const copy = () => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); };
-  return <Button darkMode={darkMode} variant="secondary" onClick={copy}>{copied ? '✓ Copied!' : label}</Button>;
+  return <Button darkMode={darkMode} variant="secondary" onClick={copy}>{copied ? '✓ COPIED' : label}</Button>;
 };
 
 const TabGroup = ({ darkMode, tabs, active, onChange }) => (
-  <div className={`flex gap-1 p-1 rounded-xl ${darkMode ? 'bg-white/5' : 'bg-black/5'}`}>
+  <div className={`flex gap-1 p-1 rounded-lg ${darkMode ? 'bg-black/50 border border-cyan-500/20' : 'bg-black/5'}`}>
     {tabs.map(tab => (
-      <button key={tab.id} onClick={() => onChange(tab.id)} className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${active === tab.id ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-lg' : darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}>{tab.label}</button>
+      <button key={tab.id} onClick={() => onChange(tab.id)} className={`flex-1 px-4 py-2 rounded text-xs font-bold uppercase tracking-wider transition-all ${active === tab.id ? 'bg-cyan-500 text-black shadow-[0_0_15px_rgba(0,240,255,0.5)]' : darkMode ? 'text-cyan-600 hover:text-cyan-400 hover:bg-cyan-500/10' : 'text-gray-600 hover:text-gray-900'}`}>{tab.label}</button>
     ))}
   </div>
 );
@@ -944,8 +945,8 @@ const PasswordGenerator = ({ darkMode }) => {
 
 const QRGenerator = ({ darkMode }) => {
   const [text, setText] = useState('https://chimeraops.org');
-  const [fgColor, setFgColor] = useState('#8b5cf6');
-  const [bgColor, setBgColor] = useState('#ffffff');
+  const [fgColor, setFgColor] = useState('#00f0ff');
+  const [bgColor, setBgColor] = useState('#0a0a0f');
   const [size, setSize] = useState(200);
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}&color=${fgColor.replace('#', '')}&bgcolor=${bgColor.replace('#', '')}`;
 
@@ -1188,7 +1189,7 @@ function App() {
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-[#0a0a0f]' : 'bg-[#f8f8fa]'}`}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap'); * { font-family: 'Inter', system-ui, sans-serif; } .font-mono { font-family: 'JetBrains Mono', monospace; }`}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap'); * { font-family: 'JetBrains Mono', monospace; }`}</style>
 
       {/* Background Effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -1199,7 +1200,7 @@ function App() {
       {/* Mobile Header */}
       <header className={`lg:hidden fixed top-0 left-0 right-0 z-50 px-4 py-3 flex items-center justify-between ${darkMode ? 'bg-[#0a0a0f]/90 backdrop-blur-xl border-b border-white/5' : 'bg-white/90 backdrop-blur-xl border-b border-black/5'}`}>
         <button onClick={() => setSidebarOpen(!sidebarOpen)} className={`w-10 h-10 rounded-xl flex items-center justify-center ${darkMode ? 'bg-white/5 text-white' : 'bg-black/5 text-gray-900'}`}>{sidebarOpen ? '✕' : '☰'}</button>
-        <div className="flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center text-white font-bold text-sm">C</div><span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>ChimeraOps</span></div>
+        <div className="flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-cyan-400 flex items-center justify-center text-black font-bold text-sm shadow-[0_0_15px_rgba(0,240,255,0.5)]">P</div><span className={`font-bold tracking-wider ${darkMode ? 'text-cyan-400' : 'text-gray-900'}`}>PROTEUS</span></div>
         <button onClick={() => setDarkMode(!darkMode)} className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${darkMode ? 'bg-white/5 text-white' : 'bg-black/5 text-gray-900'}`}>{darkMode ? '☀' : '☾'}</button>
       </header>
 
@@ -1212,8 +1213,8 @@ function App() {
           <div className={`h-full flex flex-col ${darkMode ? 'bg-[#0c0c12]/95 lg:bg-[#0c0c12]/80 backdrop-blur-xl border-r border-white/5' : 'bg-white/95 lg:bg-white/80 backdrop-blur-xl border-r border-black/5'}`}>
             <div className="p-4 pt-6 hidden lg:block">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 flex items-center justify-center text-white font-bold shadow-lg shadow-violet-500/25">C</div>
-                <div><h1 className={`text-lg font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>ChimeraOps</h1><p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>Privacy-First Security Tools</p></div>
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-cyan-400 flex items-center justify-center text-black font-bold shadow-[0_0_20px_rgba(0,240,255,0.5)]">P</div>
+                <div><h1 className={`text-lg font-bold tracking-wider ${darkMode ? 'text-cyan-400' : 'text-gray-900'}`}>PROTEUSKIT</h1><p className={`text-xs tracking-widest ${darkMode ? 'text-cyan-700' : 'text-gray-500'}`}>ADAPT. ENCRYPT. DISAPPEAR.</p></div>
               </div>
               <button onClick={() => setDarkMode(!darkMode)} className={`w-full flex items-center justify-between px-3 py-2 rounded-lg mb-4 ${darkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'}`}>
                 <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{darkMode ? 'Dark Mode' : 'Light Mode'}</span>
